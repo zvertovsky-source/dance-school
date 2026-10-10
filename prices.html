@@ -1,0 +1,13 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600&family=Unbounded:wght@600&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"><title>Цены</title>
+<style>.pr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.pr input{width:110px;text-align:right}.ex{background:#FAF9FD;border:1px dashed var(--line);border-radius:8px;padding:12px;margin-top:14px}</style></head><body><header class="top"><b>Школа танцев</b><nav><a href="attendance.html">Посещаемость</a><a href="teachers.html">Преподаватели</a><a href="prices.html">Цены</a><a href="admin.html">Платежи</a><a href="parent.html">Вид родителя</a></nav></header>
+<div class="page" style="max-width:640px"><h1>Стоимость занятий</h1><p class="muted">Меняйте цену здесь. Новая цена действует с выбранной даты, старые месяцы не пересчитываются.</p>
+<section class="card" id="p"></section>
+<div class="bar"><label>Действует с <input type="date" value="2026-11-01"></label><button class="btn" id="save">Сохранить цены</button><span class="muted" id="ok"></span></div>
+<div class="ex" id="ex"></div></div>
+<script>
+const P=[["Группа 3–6 лет",7],["Группа 7–9 лет",8],["Группа 10–14 лет",8],["Подростки и взрослые",10]];
+document.getElementById('p').innerHTML=P.map((x,i)=>'<div class="pr"><span>'+x[0]+'<br><span class="muted">за одно посещённое занятие</span></span><span><input type="number" min="0" step="0.5" value="'+x[1]+'" data-i="'+i+'" aria-label="'+x[0]+'"> BYN</span></div>').join('');
+function ex(){const v=document.querySelector('[data-i="1"]').value;document.getElementById('ex').innerHTML='Пример: в группе 7–9 лет ребёнок был на <b>7</b> занятиях из 8 → к оплате <b>'+(7*v)+' BYN</b>';}
+document.getElementById('p').oninput=ex;ex();
+document.getElementById('save').onclick=()=>document.getElementById('ok').textContent='Цены сохранены';
+</script></body></html>
