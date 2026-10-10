@@ -1,0 +1,97 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Школа танцев</title>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600&family=Unbounded:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+.top nav{display:flex}.top nav button{font:inherit;color:#CFC9E6;background:none;border:0;padding:8px 14px;border-radius:8px;cursor:pointer}
+.top nav button.on{background:#3A2F5E;color:#fff}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 8px;border-top:1px solid var(--line);cursor:pointer;border-radius:8px;width:100%;background:none;border-left:0;border-right:0;border-bottom:0;font:inherit;color:inherit;text-align:left}
+.row:hover{background:#F6F4FB}.row:first-child{border-top:0}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start}
+.back{background:none;border:0;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:0 0 10px}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:100%;background:#fff;border-left:1px solid var(--line);padding:22px;overflow:auto;transform:translateX(100%);transition:transform .2s;z-index:20;box-shadow:-8px 0 24px #231B3A22}
+#drawer.open{transform:none}
+#drawer dl{display:grid;grid-template-columns:110px 1fr;gap:8px 10px;margin:14px 0}#drawer dt{color:var(--mute);font-size:.9rem}#drawer dd{margin:0}
+.lnk{background:none;border:0;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline}
+.tg{font:inherit;font-weight:600;min-width:80px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.tg.yes{background:var(--ok);border-color:var(--ok);color:#fff}.tg.no{background:var(--warn);border-color:var(--warn);color:#fff}
+.chips{display:flex;gap:6px;overflow-x:auto;margin:10px 0}.chips button{font:inherit;padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:#fff;cursor:pointer;white-space:nowrap}.chips .on{background:var(--ink);color:#fff}
+#toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;display:none;z-index:30}
+#inv{position:absolute;left:-9999px;top:0;width:680px;padding:36px;background:#fff;color:#000;font-family:Arial,sans-serif;font-size:14px}
+#inv table{min-width:0}#inv th,#inv td{border-bottom:1px solid #ccc}
+@media(max-width:700px){.top{padding:12px 16px}.top nav{position:fixed;bottom:0;left:0;right:0;background:var(--ink);justify-content:space-around;padding:6px;z-index:10}.top nav button{padding:10px 6px;font-size:.78rem}main{padding-bottom:90px}
+#drawer{top:auto;width:100%;max-height:85vh;border-left:0;border-radius:16px 16px 0 0;transform:translateY(100%)}#drawer.open{transform:none}}
+</style></head><body>
+<header class="top"><b>Школа танцев</b><nav id="nav"></nav></header>
+<main class="page" id="v"></main>
+<aside id="drawer" aria-label="Карточка"></aside><div id="toast"></div><div id="inv"></div>
+<script>
+/* ДЕМО-ДАННЫЕ: заменяются данными из Supabase */
+let T=[{id:1,n:"Доброгост"},{id:2,n:"Маринкина"},{id:3,n:"Решетник"}];
+let G=[{id:1,t:1,n:"7–9 лет",s:"вт/чт 17:20",p:8},{id:2,t:1,n:"10–14 лет",s:"вт/чт 19:00",p:8},{id:3,t:2,n:"5–7 лет",s:"пн/ср 15:00",p:7},{id:4,t:2,n:"10–14 лет",s:"пн/ср 19:00",p:8},{id:5,t:3,n:"6–8 лет",s:"пн/ср 18:00",p:7}];
+let K=[[1,"Ирина Красникова","12.03.2018","Елена Красникова","+375 29 111-22-33","elena@example.com","№12 от 01.09.2025","",[1]],[2,"Мира Демидова","04.11.2017","Ольга Демидова","+375 33 222-33-44","olga@example.com","№15 от 03.09.2025","Аллергия на пыль",[1]],[3,"Ксения Мазур","21.05.2018","Анна Мазур","+375 44 333-44-55","","№18 от 05.09.2025","",[1,2]],[4,"Варвара Бойко","09.01.2013","Ирина Бойко","+375 25 444-55-66","irina@example.com","№21 от 10.09.2025","",[2]],[5,"Лиза Новик","30.06.2019","Мария Новик","+375 29 555-66-77","maria@example.com","№24 от 12.09.2025","",[3]],[6,"Вера Лис","14.02.2012","Татьяна Лис","+375 33 666-77-88","tanya@example.com","№27 от 15.09.2025","",[4]],[7,"Ника Жук","02.08.2018","Ольга Жук","+375 44 777-88-99","zhuk@example.com","№30 от 18.09.2025","",[5]]].map(a=>({id:a[0],n:a[1],dob:a[2],par:a[3],tel:a[4],em:a[5],dog:a[6],note:a[7],g:a[8]}));
+const D=["2026-10-01","2026-10-06","2026-10-08","2026-10-13"];let A={};K.forEach(k=>k.g.forEach(g=>D.forEach((d,i)=>{if(i<3)A[k.id+'|'+g+'|'+d]=(k.id+i)%4?1:0})));
+const S={tab:'kids',t:null,g:null,drawer:null,pk:1,from:'2026-10-01',to:'2026-10-31',ag:1,ad:D[2],q:''};
+const $=id=>document.getElementById(id),tn=id=>T.find(t=>t.id==id).n,gn=id=>{const g=G.find(x=>x.id==id);return tn(g.t)+' · '+g.n};
+const kidsOf=g=>K.filter(k=>k.g.includes(g));
+const TABS=[['kids','Ученики'],['groups','Группы'],['teachers','Учителя'],['table','Таблица'],['att','Посещаемость'],['pay','Оплаты']];
+function go(tab,o={}){Object.assign(S,{tab},o);S.drawer=null;draw()}
+function toast(m){const e=$('toast');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',2800)}
+const kidRow=k=>`<button class="row" onclick="S.drawer=${k.id};draw()"><span>${k.n}</span><span class="muted">${k.g.map(g=>G.find(x=>x.id==g).n).join(', ')}</span></button>`;
+const grpBlock=g=>`<button class="back" onclick="S.g=null;draw()">← Назад</button><h2>${gn(g)}</h2><p class="muted">${G.find(x=>x.id==g).s} · ${kidsOf(g).length} учеников</p>${kidsOf(g).map(kidRow).join('')}`;
+function view(){const t=S.tab;
+if(t=='kids'){const q=S.q.toLowerCase();return `<h1>Ученики</h1><div class="bar"><input id="q" type="search" value="${S.q}" placeholder="Поиск по ученику или родителю" style="flex:1" oninput="S.q=this.value;draw(1)"></div><section class="card">${K.filter(k=>(k.n+k.par).toLowerCase().includes(q)).map(kidRow).join('')||'<p class="muted">Никого не нашли</p>'}</section>`}
+if(t=='groups'){if(S.g)return `<section class="card">${grpBlock(S.g)}</section>`;return `<h1>Группы</h1><section class="card">${G.map(g=>`<button class="row" onclick="S.g=${g.id};draw()"><span>${tn(g.t)} · ${g.n}</span><span class="muted">${g.s} · ${kidsOf(g.id).length} уч.</span></button>`).join('')}</section>`}
+if(t=='teachers'){if(S.g)return `<section class="card">${grpBlock(S.g)}</section>`;
+if(S.t){return `<section class="card"><button class="back" onclick="S.t=null;draw()">← Все учителя</button><h2>${tn(S.t)}</h2>${G.filter(g=>g.t==S.t).map(g=>`<button class="row" onclick="S.g=${g.id};draw()"><span>${g.n}</span><span class="muted">${g.s} · ${kidsOf(g.id).length} уч.</span></button>`).join('')}</section>`}
+return `<h1>Учителя</h1><div class="cols" style="margin-top:14px">${T.map(t=>`<button class="card row" style="border:1px solid var(--line)" onclick="S.t=${t.id};draw()"><span><b>${t.n}</b><br><span class="muted">${G.filter(g=>g.t==t.id).length} групп</span></span><span class="muted">${K.filter(k=>k.g.some(g=>G.find(x=>x.id==g).t==t.id)).length} уч.</span></button>`).join('')}</div>`}
+if(t=='table')return `<h1>Исходная таблица</h1><p class="muted">Все данные в том виде, в каком они в вашем файле. Здесь же добавляются новые ученики.</p><div class="bar"><button class="btn" onclick="toast('Добавление через сайт будет в следующей версии. Пока: импорт или Table Editor в Supabase')">+ Добавить ученика</button></div><section class="card scroll"><table><thead><tr><th>ФИО</th><th>Дата рожд.</th><th>Родитель</th><th>Телефон</th><th>Договор</th><th>Преподаватель</th><th>Группа</th></tr></thead><tbody>${K.map(k=>`<tr style="cursor:pointer" onclick="S.drawer=${k.id};draw()"><td>${k.n}</td><td>${k.dob}</td><td>${k.par}</td><td>${k.tel}</td><td>${k.dog}</td><td>${k.g.map(g=>tn(G.find(x=>x.id==g).t)).join(', ')}</td><td>${k.g.map(g=>G.find(x=>x.id==g).n).join(', ')}</td></tr>`).join('')}</tbody></table></section>`;
+if(t=='att'){const ks=kidsOf(+S.ag);return `<h1>Посещаемость</h1><div class="bar"><select onchange="S.ag=+this.value;draw()" aria-label="Группа">${G.map(g=>`<option value="${g.id}" ${g.id==S.ag?'selected':''}>${gn(g.id)}</option>`).join('')}</select></div><section class="card"><div class="chips">${lessonDates(S.ag).map(d=>`<button class="${d==S.ad?'on':''}" onclick="S.ad='${d}';draw()">${d.slice(8)}.${d.slice(5,7)}</button>`).join('')}</div><label class="muted">Другая дата: <input type="date" value="${S.ad}" onchange="S.ad=this.value;draw()"></label><p class="muted">Был: ${ks.filter(k=>A[k.id+'|'+S.ag+'|'+S.ad]===1).length} из ${ks.length}</p>${ks.map(k=>{const v=A[k.id+'|'+S.ag+'|'+S.ad];return `<div class="row" style="cursor:default"><span>${k.n}</span><span style="display:flex;gap:6px"><button class="tg ${v===1?'yes':''}" onclick="mark(${k.id},1)">Был</button><button class="tg ${v===0?'no':''}" onclick="mark(${k.id},0)">Не был</button></span></div>`}).join('')}</section>`}
+if(t=='pay'){const k=K.find(x=>x.id==S.pk);if(!k)return '<h1>Оплаты</h1><p class="muted">Нет учеников</p>';const L=lines(k);return `<h1>Оплаты</h1><section class="card"><div class="bar"><select onchange="S.pk=+this.value;draw()" aria-label="Ученик">${K.map(x=>`<option value="${x.id}" ${x.id==S.pk?'selected':''}>${x.n}</option>`).join('')}</select><label>с <input type="date" value="${S.from}" onchange="S.from=this.value;draw()"></label><label>по <input type="date" value="${S.to}" onchange="S.to=this.value;draw()"></label></div><div class="scroll"><table><thead><tr><th>Группа</th><th class="num">Занятий</th><th class="num">Цена</th><th class="num">Сумма</th></tr></thead><tbody>${L.rows.map(r=>`<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]} BYN</td><td class="num">${r[3]} BYN</td></tr>`).join('')}<tr><td colspan="3"><b>Итого к оплате</b></td><td class="num"><b>${L.total} BYN</b></td></tr></tbody></table></div>
+<div class="bar"><input id="to" type="email" value="${k.em}" placeholder="E-mail родителя" style="flex:1;min-width:220px"><button class="btn ghost" onclick="pdf(0)">Скачать PDF</button><button class="btn" onclick="pdf(1)">Отправить родителю</button></div>${k.em?'':'<p class="muted">У ребёнка не указан e-mail — введите его вручную.</p>'}</section>`}}
+const priceOn=(g,d)=>{const x=G.find(y=>y.id==g);if(!x.ph)return x.p;let p=0;for(const h of x.ph)if(h.f<=d)p=h.p;return p};
+const lessonDates=g=>[...new Set(Object.keys(A).filter(x=>x.split('|')[1]==g).map(x=>x.split('|')[2]).concat([S.ad]))].sort().slice(-8);
+function lines(k){const rows=k.g.map(g=>{const ds=Object.keys(A).filter(x=>{const [a,b,c]=x.split('|');return a==k.id&&b==g&&c>=S.from&&c<=S.to&&A[x]===1}).map(x=>x.split('|')[2]);const sum=ds.reduce((s,d)=>s+priceOn(g,d),0);return [gn(g),ds.length,ds.length?+(sum/ds.length).toFixed(2):G.find(x=>x.id==g).p,+sum.toFixed(2)]});return {rows,total:+rows.reduce((s,r)=>s+r[3],0).toFixed(2)}}
+let GU={},KU={},EU={},LS={},ME=null;
+const IS_ADMIN=()=>!window.sb||(ME&&ME.role==='admin');
+async function mark(k,v){const key=k+'|'+S.ag+'|'+S.ad;A[key]=v;draw();if(!window.sb)return;
+try{let l=LS[S.ag+'|'+S.ad];if(!l){const {data,error}=await sb.from('lessons').upsert({group_id:GU[S.ag],lesson_date:S.ad},{onConflict:'group_id,lesson_date'}).select('id').single();if(error)throw error;l=LS[S.ag+'|'+S.ad]=data.id}
+const {error}=await sb.from('attendance').upsert({lesson_id:l,enrollment_id:EU[k+'|'+S.ag],present:!!v});if(error)throw error}
+catch(e){toast('Не сохранено: '+e.message);delete A[key];draw()}}
+async function pdf(send){const k=K.find(x=>x.id==S.pk),L=lines(k),to=($('to')||{}).value;
+$('inv').innerHTML=`<h2 style="font-family:Arial">Школа танцев — счёт на оплату</h2><p>Ученик: <b>${k.n}</b><br>Период: ${S.from} — ${S.to}</p><table style="width:100%;border-collapse:collapse"><tr><th align="left">Группа</th><th>Занятий</th><th>Цена</th><th align="right">Сумма</th></tr>${L.rows.map(r=>`<tr><td>${r[0]}</td><td align="center">${r[1]}</td><td align="center">${r[2]} BYN</td><td align="right">${r[3]} BYN</td></tr>`).join('')}</table><h3 style="text-align:right">Итого к оплате: ${L.total} BYN</h3>`;
+const job=html2pdf().set({margin:8,filename:`Оплата_${k.n}_${S.from}_${S.to}.pdf`,html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4'}}).from($('inv'));
+if(!send){job.save();return}
+if(!to){toast('Укажите e-mail родителя');return}
+const b64=(await job.outputPdf('datauristring')).split(',')[1];
+if(!window.sb){toast('Демо: PDF готов, письмо не отправлено (нет подключения к Supabase)');return}
+const {error}=await sb.functions.invoke('send-invoice',{body:{child_id:KU[k.id]||null,period_from:S.from,period_to:S.to,to_email:to,pdf_base64:b64}});
+toast(error?'Ошибка отправки: '+error.message:'Письмо отправлено на '+to)}
+function drawer(){const d=$('drawer'),k=K.find(x=>x.id==S.drawer);d.classList.toggle('open',!!k);if(!k)return;
+d.innerHTML=`<button class="back" onclick="S.drawer=null;draw()">✕ Закрыть</button><h2>${k.n}</h2><dl><dt>Дата рождения</dt><dd>${k.dob}</dd><dt>Родитель</dt><dd>${k.par}</dd><dt>Телефон</dt><dd>${k.tel}</dd><dt>E-mail</dt><dd>${k.em||'<span class="muted">не указан</span>'}</dd><dt>Договор</dt><dd>${k.dog}</dd><dt>Примечание</dt><dd>${k.note||'—'}</dd>${k.g.map(g=>`<dt>Группа</dt><dd><button class="lnk" onclick="go('groups',{g:${g}})">${G.find(x=>x.id==g).n}</button>, <button class="lnk" onclick="go('teachers',{t:${G.find(x=>x.id==g).t},g:null})">${tn(G.find(x=>x.id==g).t)}</button></dd>`).join('')}</dl><button class="btn" style="width:100%" onclick="go('pay',{pk:${k.id}})">Оплата и PDF</button>`}
+function draw(keep){if(window.sb&&!ME){$('nav').innerHTML='';$('v').innerHTML=LOGIN;drawer();return}const a=document.activeElement,id=a&&a.id;$('nav').innerHTML=TABS.filter(t=>IS_ADMIN()||!['table','pay'].includes(t[0])).map(t=>`<button class="${t[0]==S.tab?'on':''}" onclick="go('${t[0]}',{t:null,g:null})">${t[1]}</button>`).join('')+(window.sb?'<button onclick="logout()">Выйти</button>':'');$('v').innerHTML=view();drawer();if(keep&&id){const e=$(id);if(e){e.focus();e.setSelectionRange&&e.setSelectionRange(99,99)}}}
+const LOGIN=`<section class="card" style="max-width:360px;margin:40px auto"><h2>Вход</h2><div class="bar" style="flex-direction:column;align-items:stretch"><input id="le" type="email" placeholder="E-mail" autocomplete="username"><input id="lp" type="password" placeholder="Пароль" autocomplete="current-password"><button class="btn" onclick="login()">Войти</button></div></section>`;
+async function all(t,sel,ord){let o=[],f=0;for(;;){const {data,error}=await sb.from(t).select(sel).order(ord).range(f,f+999);if(error)throw error;o=o.concat(data);if(data.length<1000)return o;f+=1000}}
+const fmt=s=>s?s.split('-').reverse().join('.'):'—';
+async function load(){
+const [t,g,pr,c,e,at]=await Promise.all([all('teachers','id,name','id'),all('groups','id,teacher_id,name,schedule,price_type_id','id'),all('prices','price_type_id,price,valid_from','id'),all('children','id,full_name,birth_date,parent_name,phone,email,contract,notes','id'),all('enrollments','id,child_id,group_id','id'),all('attendance','present,enrollments(child_id,group_id),lessons(id,group_id,lesson_date)','lesson_id')]);
+const ti={},gi={},ki={},ph={},today=new Date().toISOString().slice(0,10);GU={};KU={};EU={};LS={};A={};
+T=t.map((x,i)=>(ti[x.id]=i+1,{id:i+1,n:x.name}));
+pr.sort((a,b)=>a.valid_from<b.valid_from?-1:1).forEach(x=>(ph[x.price_type_id]=ph[x.price_type_id]||[]).push({f:x.valid_from,p:+x.price}));
+G=g.filter(x=>IS_ADMIN()||x.teacher_id==ME.teacher_id).map((x,i)=>{gi[x.id]=i+1;GU[i+1]=x.id;const h=ph[x.price_type_id]||[];return {id:i+1,t:ti[x.teacher_id],n:x.name,s:x.schedule||'',ph:h,p:(h.filter(y=>y.f<=today).pop()||{p:0}).p}});
+K=c.map((x,i)=>(ki[x.id]=i+1,KU[i+1]=x.id,{id:i+1,n:x.full_name,dob:fmt(x.birth_date),par:x.parent_name||'—',tel:x.phone||'—',em:x.email||'',dog:x.contract||'—',note:x.notes||'',g:[]}));
+e.forEach(x=>{const k=K[ki[x.child_id]-1],gg=gi[x.group_id];if(k&&gg){if(!k.g.includes(gg))k.g.push(gg);EU[k.id+'|'+gg]=x.id}});
+at.forEach(x=>{const en=x.enrollments,l=x.lessons;if(!en||!l)return;const k=ki[en.child_id],gg=gi[en.group_id];if(k&&gg){A[k+'|'+gg+'|'+l.lesson_date]=x.present?1:0;LS[gg+'|'+l.lesson_date]=l.id}});
+if(!IS_ADMIN())K=K.filter(k=>k.g.length)}
+async function start(){const {data:{session}}=await sb.auth.getSession();if(!session){draw();return}
+const {data}=await sb.from('profiles').select('role,teacher_id').eq('id',session.user.id).maybeSingle();
+if(!data){toast('Профиль не создан — обратитесь к администратору');await sb.auth.signOut();draw();return}
+ME=data;try{await load()}catch(e){toast('Ошибка загрузки: '+e.message)}
+S.ad=new Date().toISOString().slice(0,10);S.ag=(G[0]||{}).id;S.pk=(K[0]||{}).id;S.tab=IS_ADMIN()?'kids':'att';draw()}
+async function login(){const {error}=await sb.auth.signInWithPassword({email:$('le').value,password:$('lp').value});if(error)return toast('Неверный e-mail или пароль');start()}
+async function logout(){await sb.auth.signOut();ME=null;draw()}
+window.sb?start():draw();
+</script></body></html>
